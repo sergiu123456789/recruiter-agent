@@ -1,116 +1,160 @@
-\# Sergiu – AI Recruiter Tour Agent (Google/Kaggle Agents Style)
+🚀 Sergiu – AI Recruiter Tour Agent
+Production-ready AI Agent (Google/Kaggle Agents Style)
 
+This project implements a production-grade AI Recruiter Tour Agent inspired by the Google/Kaggle “Agents” course and recent agent architecture best practices.
 
+It acts as an interactive recruiter companion, helping hiring managers instantly understand your strongest qualifications through:
 
+Smart role detection
 
+Criteria-based project selection
 
-This project implements an \*\*AI recruiter tour agent\*\* inspired by the Google / Kaggle agents course and whitepapers:
+CV-RAG Q&A
 
+ATS-ready summaries
 
+Recruiter email drafting
 
+Session memory + trajectory logging
 
+Auto-start when arriving from GitHub or LinkedIn
 
-\- Introduction to Agents \& Architectures
+Designed as a single-agent with tools, following modern agentic patterns:
 
-\- Agent Quality
+Model (LLM) →
 
-\- Context Engineering (Sessions \& Memory)
+Tools (RAG, portfolio, ATS) →
 
-\- Agent Tools \& MCP
+Orchestrator →
 
-\- Prototype to Production
+State + Trajectory →
 
+Frontend widget
 
+🧠 Core Capabilities
+✔️ Recruiter-Aware Entry
 
+Detects if the visitor came from GitHub or LinkedIn, then tailors the first message.
 
+✔️ Role & Criteria Extraction
 
-The agent:
+Understands roles like:
 
+Senior ML Engineer
 
+AI Engineer
 
+NLP Researcher
 
+Data Scientist
 
-\- Detects recruiters coming from \*\*GitHub / LinkedIn\*\*
+And recruiter criteria such as:
 
-\- Asks for the \*\*role\*\* and \*\*evaluation criteria\*\*
+Production RAG
 
-\- Uses \*\*embeddings\*\* to match the role + criteria to your most relevant projects
+Ownership
 
-\- Can perform \*\*RAG over your CV\*\* to answer detailed questions
+Leadership
 
-\- Generates an \*\*ATS-ready summary\*\* and \*\*recruiter follow-up email draft\*\*
+Communication
 
-\- Maintains a simple \*\*trajectory log\*\* (agent quality \& observability hook)
+✔️ Project Relevance Ranking
 
+Uses embeddings to compute a shortlist of the most relevant projects based on:
 
+Role
 
+Criteria
 
+Tags
 
-\## 1. Tech Stack
+Summary text
 
+Impact statements
 
+✔️ Deep-Dive Flow
 
+Walks recruiters project-by-project, explaining:
 
+What the project does
 
-\- \*\*Backend\*\*: FastAPI + Uvicorn
+Impact
 
-\- \*\*Model\*\*: Gemini 1.5 Flash (via `google-genai`)
+Why it matches the role + criteria
 
-\- \*\*Embeddings\*\*: `text-embedding-004` for project and CV retrieval
+✔️ ATS-Ready Summary + Recruiter Email Draft
 
-\- \*\*Architecture\*\*: model + tools + orchestration (single-agent) with state and basic trajectory logging
+Creates:
 
-\- \*\*Frontend\*\*: Static HTML + JS widget (GitHub Pages-ready)
+A polished ATS paragraph
 
-\- \*\*Deployment\*\*: Google Cloud Run (buildpacks, no Docker required)
+A recruiter follow-up email template
 
+✔️ CV RAG (Gemini Embeddings)
 
+Chunked CV retrieval using text-embedding-004, then answer generation using Gemini 1.5 Flash.
 
+✔️ Agent Quality & Observability
 
+Lightweight trajectory logging:
 
-> Note: `google-adk` can be added later to wrap these tools into a formal ADK Agent, but this version focuses on the custom orchestrator as in the course.
+user step
 
+agent step
 
+tool step
 
+LLM judge evaluation (1–5 score)
 
+🏗️ Tech Stack
 
----
+Backend: FastAPI, Uvicorn
 
+LLM: Gemini 1.5 Flash (google-genai)
 
+Embeddings: models/text-embedding-004
 
+Architecture: Custom single-agent orchestrator with tools
 
+Frontend: Small JS widget (GitHub Pages compatible)
 
-\## 2. Project Structure
+Deployment: Google Cloud Run
 
+Storage: In-memory session store (extendable)
 
+Buildpacks deployment works, but Dockerfile is included for full control.
 
-
-
-```text
-
+📁 Project Structure
 recruiter-agent/
-
 ├── README.md
-
 ├── requirements.txt
-
 ├── main.py
-
 ├── app/
-
-│ ├── \_\_init\_\_.py
-
-│ ├── server.py
-
-│ ├── agent.py
-
-│ ├── tools.py
-
-│ ├── cv\_rag.py
-
-│ └── quality.py
-
+│   ├── __init__.py
+│   ├── server.py
+│   ├── agent.py
+│   ├── tools.py
+│   ├── cv_rag.py
+│   ├── quality.py
+│   ├── models/
+│   │   └── state.py
+│   └── session_store.py
 └── frontend/
+    └── index.html
 
-└── index.html
+🚀 Deployment (Cloud Run)
+
+Ensure GOOGLE_API_KEY is available (Cloud Run → Variables).
+
+Deploy with Docker:
+
+gcloud run deploy recruiter-agent \
+    --source . \
+    --platform managed \
+    --allow-unauthenticated \
+    --region europe-west1 \
+    --set-env-vars GOOGLE_API_KEY=$GOOGLE_API_KEY
+
+
+Or with your included PowerShell script (deploy.ps1).
 
