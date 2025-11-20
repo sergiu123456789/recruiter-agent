@@ -1,8 +1,16 @@
-# app/cv_rag.py (patched with direct field extraction and section-level overrides)
+# app/cv_rag.py
+"""Cloud-Run safe CV RAG using Gemini embeddings (google-generativeai).
+
+Production version:
+- No debug prints
+- Lazy embedding computation (first query)
+- Top-K retrieval for better accuracy
+- Tight prompt to reduce hallucinations
+"""
 
 from __future__ import annotations
 
-from typing import List, Optional, Dict
+from typing import List, Tuple, Optional
 import os
 
 import numpy as np
@@ -12,7 +20,7 @@ EMBED_MODEL = "models/text-embedding-004"
 GEN_MODEL = "gemini-1.5-flash"
 
 _client_configured: bool = False
-_rag = None
+_rag: Optional["CVRAG"] = None
 
 
 # -------------------------------------------------------------------
@@ -107,104 +115,16 @@ def _cosine_sim_matrix(query: np.ndarray, docs: np.ndarray) -> np.ndarray:
 
 
 # -------------------------------------------------------------------
-# Direct field + section extractors
-# -------------------------------------------------------------------
-
-
-def _extract_direct_fields(cv_text: str) -> Dict[str, str]:
-    """Extract direct, single-line fields like phone, email, and primary location."""
-    fields: Dict[str, str] = {}
-
-    for line in cv_text.splitlines():
-        low = line.lower()
-
-        if "phone:" in low and "phone" not in fields:
-            fields["phone"] = line.split(":", 1)[1].strip()
-
-        if "email:" in low and "email" not in fields:
-            fields["email"] = line.split(":", 1)[1].strip()
-
-        if "location:" in low:
-            value = line.split(":", 1)[1].strip()
-            # Prefer a concrete city/country if present
-            if "timisoara" in value.lower():
-                fields["location"] = value
-            elif "location" not in fields:
-                fields["location"] = value
-
-    return fields
-
-
-def _extract_certifications(cv_text: str) -> str:
-    """Extract the 'Recent Certifications' section as a clean bullet list."""
-    lines = cv_text.splitlines()
-    result: List[str] = []
-    capture = False
-
-    stop_markers = [
-        "previous trainings",
-        "languages",
-        "homeschooling teacher",
-        "software engineer",
-        "education",
-        "additional information",
-    ]
-
-    for line in lines:
-        low = line.lower().strip()
-
-        if "recent certifications" in low:
-            capture = True
-            # skip the header line itself
-            continue
-
-        if capture:
-            if not low:
-                # stop on blank line after we've captured something
-                if result:
-                    break
-                continue
-
-            # stop when we reach another major section
-            if any(low.startswith(m) for m in stop_markers):
-                break
-
-            # normalize bullet formatting
-            stripped = line.strip()
-            if stripped.startswith("-"):
-                stripped = stripped.lstrip("-").strip()
-            result.append(stripped)
-
-    # Deduplicate while preserving order (since section appears twice in CV)
-    seen = set()
-    deduped: List[str] = []
-    for item in result:
-        if item and item not in seen:
-            seen.add(item)
-            deduped.append(item)
-
-    if not deduped:
-        return ""
-
-    return "Recent certifications:\n" + "\n".join(f"- {c}" for c in deduped)
-
-
-# -------------------------------------------------------------------
 # Core RAG implementation
 # -------------------------------------------------------------------
 
 
 class CVRAG:
-    """RAG over Sergiu's CV with Gemini embeddings + deterministic field overrides."""
+    """RAG over Sergiu's CV with Gemini embeddings."""
 
     def __init__(self) -> None:
-        # Load CV once
+        # Load + chunk CV once
         cv_text = _load_cv_text()
-        self.raw_cv_text: str = cv_text
-        self.direct = _extract_direct_fields(cv_text)
-        self.certifications_text: str = _extract_certifications(cv_text)
-
-        # Chunking + lazy embeddings
         self.chunks: List[str] = _chunk_text(cv_text)
         self._embeddings: Optional[np.ndarray] = None  # lazy
 
@@ -245,35 +165,9 @@ class CVRAG:
         top_k_idx = np.argsort(sims)[-k:][::-1]
         return [self.chunks[int(i)] for i in top_k_idx]
 
-    # -------------------------------------------------------------------
-    # Public query API
-    # -------------------------------------------------------------------
-
     def query(self, question: str) -> str:
-        """Return an answer grounded only in the CV (with direct overrides)."""
-        q = question.lower()
-
-        # --- Direct field: phone / contact ---
-        if "phone" in q or "contact" in q:
-            if self.direct.get("phone"):
-                return f"Sergiu's phone number is: {self.direct['phone']}."
-
-        # --- Direct field: email ---
-        if "email" in q:
-            if self.direct.get("email"):
-                return f"Sergiu's email is: {self.direct['email']}."
-
-        # --- Direct field: location / where based ---
-        if any(w in q for w in ["location", "based", "city", "country", "where is he"]):
-            if self.direct.get("location"):
-                return f"Sergiu is based in {self.direct['location']}."
-
-        # --- Direct section: certifications ---
-        if "cert" in q or "certification" in q:
-            if self.certifications_text:
-                return self.certifications_text
-
-        # --- Fallback: embedding-based RAG over CV text ---
+        """Return an answer grounded only in the CV."""
+        # Try to retrieve relevant snippets
         relevant_chunks = self._retrieve_top_k(question, k=3)
         if not relevant_chunks:
             return "I couldn't find this information in Sergiu's CV."
