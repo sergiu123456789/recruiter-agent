@@ -134,8 +134,7 @@ def chat(req: ChatRequest):
 # -------------------------
 @app.post("/cv-rag")
 def cv_rag_endpoint(req: CVRequest):
-    rag = get_cv_rag()
-    answer = rag.query(req.question)
+    answer = get_cv_rag(req.question)
     return {"answer": answer}
 
 
@@ -168,3 +167,8 @@ def a2a_recruiter(req: A2ARecruiterRequest):
         ats_summary=summaries["ats"],
         email_template=summaries["email"],
     )
+
+
+if __name__ == "__main__":
+    import uvicorn, os
+    uvicorn.run("app.server:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
