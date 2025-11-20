@@ -5,26 +5,26 @@ from typing import Dict, Any, List, Optional
 import os
 import json
 
-# FIX: correct Google Generative AI import
 import google.generativeai as genai
 
-GEN_MODEL = "models/gemini-1.5-flash"
+GEN_MODEL = "gemini-1.5-flash"
 
-_client: Optional[genai.GenerativeModel] = None
+# simple flag to avoid re-configuring on every call
+_client_configured: bool = False
 
 
-def get_client() -> genai.GenerativeModel:
-    global _client
+def _ensure_client_configured() -> None:
+    """Configure google.generativeai once per process."""
+    global _client_configured
+    if _client_configured:
+        return
 
-    if _client is None:
-        api_key = os.environ.get("GOOGLE_API_KEY")
-        if not api_key:
-            raise RuntimeError("GOOGLE_API_KEY is not set.")
+    api_key = os.environ.get("GOOGLE_API_KEY")
+    if not api_key:
+        raise RuntimeError("GOOGLE_API_KEY is not set.")
 
-        genai.configure(api_key=api_key)
-        _client = genai.GenerativeModel(GEN_MODEL)
-
-    return _client
+    genai.configure(api_key=api_key)
+    _client_configured = True
 
 
 def evaluate_agent_turn(
@@ -33,8 +33,10 @@ def evaluate_agent_turn(
     user_message: str,
     agent_reply: str,
 ) -> Dict[str, Any]:
-
-    model = get_client()
+    """
+    Use Gemini as an LLM-judge to rate the agent's reply from 1–5 and surface issues.
+    """
+    _ensure_client_configured()
 
     crit_text = ", ".join(criteria or [])
     prompt = f"""
@@ -62,16 +64,38 @@ Respond ONLY as JSON with this schema:
   "issues": ["short issue labels"],
   "notes": "one or two sentences explaining your rating"
 }}
-"""
-
-    resp = model.generate_content(prompt)
-    text = getattr(resp, "text", "").strip()
+""".strip()
 
     try:
-        return json.loads(text)
-    except Exception:
+        model = genai.GenerativeModel(GEN_MODEL)
+        resp = model.generate_content(prompt)
+        text = getattr(resp, "text", "") or str(resp)
+    except Exception as e:
+        # if judge itself fails, propagate a soft error
         return {
+            "score": 3,
+            "issues": ["judge_call_error"],
+            "notes": f"Judge failed with {type(e).__name__}: {e}",
+        }
+
+    text = text.strip()
+
+    try:
+        data = json.loads(text)
+    except Exception:
+        # Fallback: keep something usable
+        data = {
             "score": 3,
             "issues": ["judge_parse_error"],
             "notes": text[:200],
         }
+
+    # Ensure minimal schema
+    if "score" not in data:
+        data["score"] = 3
+    if "issues" not in data or not isinstance(data["issues"], list):
+        data["issues"] = ["unknown"]
+    if "notes" not in data:
+        data["notes"] = ""
+
+    return data

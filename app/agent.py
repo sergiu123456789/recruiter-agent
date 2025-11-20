@@ -12,6 +12,7 @@ from .tools import (
     generate_ats_summary_and_email,
 )
 from .utils.normalize import normalize_criteria, VALID_CRITERIA
+from .cv_rag import get_cv_rag  # <-- CV RAG integration
 
 
 # ------------------------------------------------------------
@@ -76,6 +77,85 @@ def remember(state: State, kind: str, payload: Dict[str, Any]) -> None:
             "payload": payload,
         }
     )
+
+
+# ------------------------------------------------------------
+# CV Q&A helpers (RAG questions)
+# ------------------------------------------------------------
+
+CV_QUERY_KEYWORDS = [
+    "phone",
+    "phone number",
+    "number",
+    "contact",
+    "email",
+    "certification",
+    "certifications",
+    "certificate",
+    "degree",
+    "education",
+    "university",
+    "location",
+    "city",
+    "country",
+    "based",
+    "address",
+    "experience",
+    "years of experience",
+    "skills",
+    "skillset",
+    "technologies",
+    "tech stack",
+    "stack",
+    "cv",
+    "resume",
+]
+
+
+def _looks_like_cv_question(msg: str) -> bool:
+    """
+    Heuristic to decide if the recruiter is asking something
+    that should be answered from the CV (via RAG).
+    """
+    low = msg.lower()
+    return any(k in low for k in CV_QUERY_KEYWORDS)
+
+
+def answer_from_cv(state: State, user_message: str) -> Optional[Dict[str, Any]]:
+    """
+    Try to answer recruiter question using CV-RAG.
+    Returns a reply dict or None if something goes wrong.
+    """
+    try:
+        rag = get_cv_rag()
+        answer = rag.query(user_message)
+
+        # log in lightweight memory so we can inspect later
+        remember(
+            state,
+            "cv_rag_query",
+            {"question": user_message, "answer": answer},
+        )
+
+        reply = (
+            "Here’s what I found in Sergiu’s CV:\n\n"
+            f"{answer}"
+        )
+
+        return {"reply": reply, "state": state}
+    except Exception as e:
+        remember(
+            state,
+            "cv_rag_error",
+            {"question": user_message, "error": type(e).__name__},
+        )
+        return {
+            "reply": (
+                "CV Q&A is temporarily unavailable right now, "
+                "but you can still explore projects and ATS summaries."
+            ),
+            "state": state,
+        }
 
 
 # ------------------------------------------------------------
@@ -319,10 +399,12 @@ def _format_criteria_confirmation(
 
 def agent_turn(state: State, user_message: str) -> Dict[str, Any]:
     """
-    Core orchestrator: implements the role → criteria → project selection → ATS loop.
+    Core orchestrator: implements the role → criteria → project selection → ATS loop,
+    plus CV Q&A (RAG over the CV).
 
-    This function is intentionally deterministic (no LLM calls here) so it
-    plays nicely with evaluation, trajectories, and CI tests.
+    This function is intentionally deterministic (no direct LLM calls here) so it
+    plays nicely with evaluation, trajectories, and CI tests. All LLM work happens
+    in tools (Gemini, RAG, etc.).
     """
     msg = user_message.strip()
     low = msg.lower()
@@ -397,14 +479,24 @@ def agent_turn(state: State, user_message: str) -> Dict[str, Any]:
                 "Here’s what I can do:\n\n"
                 "1. **Project deep dives** – walk you through the most relevant projects.\n"
                 "2. **ATS-style summary** – concise summary + recruiter follow-up email draft.\n"
-                "3. **CV Q&A** – you can ask detailed questions about CV via the separate CV endpoint.\n\n"
+                "3. **CV Q&A** – ask about phone number, certifications, skills, location, etc.\n\n"
                 "You can say:\n"
                 "- `1` or `another` → next project deep dive\n"
                 "- `2` or `ats` → ATS summary\n"
+                "- `what is his phone number?` → CV-based answer\n"
                 "- `change role` / `change criteria` / `reset`"
             ),
             "state": state,
         }
+
+    # --------------------------------------------------------
+    # CV Q&A (RAG) — available ANYTIME
+    # --------------------------------------------------------
+    if _looks_like_cv_question(msg):
+        rag_result = answer_from_cv(state, msg)
+        if rag_result is not None:
+            return rag_result
+        # If something went wrong, we fall through to the usual logic.
 
     # --------------------------------------------------------
     # Recruiter auto-landing from GitHub / LinkedIn
@@ -532,7 +624,11 @@ def agent_turn(state: State, user_message: str) -> Dict[str, Any]:
                 "You can:\n"
                 "1) Project deep dive (`1`, `another`, `next`)\n"
                 "2) ATS summary + email (`2`, `ats`)\n"
-                "Or paste a job description for extra context."
+                "Or paste a job description for extra context.\n\n"
+                "At any point, you can also ask CV questions like:\n"
+                "- `What is his phone number?`\n"
+                "- `Which certifications does he have?`\n"
+                "- `Where is he based?`"
             ),
             "state": state,
         }
@@ -675,7 +771,8 @@ def agent_turn(state: State, user_message: str) -> Dict[str, Any]:
             "You can:\n"
             "1) Request a project deep dive (`1`, `another`)\n"
             "2) Request an ATS-style summary (`2`, `ats`)\n"
-            "Or say `help` to see all options."
+            "Or say `help` to see all options.\n\n"
+            "You can also ask CV-specific questions like phone number, certifications, or skills."
         ),
         "state": state,
     }

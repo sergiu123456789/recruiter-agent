@@ -105,11 +105,10 @@ STATIC_PROJECTS: List[Dict[str, Any]] = [
 # ============================================================
 
 _CACHE: Optional[Dict[str, Any]] = None
-_CACHE_TTL_SECONDS = int(os.getenv("PORTFOLIO_TTL_SECONDS", "21600"))  # 6h default
+_CACHE_TTL_SECONDS = int(os.getenv("PORTFOLIO_TTL_SECONDS", "21600"))  # 6h
 
 
 def _is_cache_valid() -> bool:
-    global _CACHE
     if not _CACHE:
         return False
     ts = _CACHE.get("timestamp", 0)
@@ -176,7 +175,6 @@ def force_refresh_portfolio() -> int:
         gh_projects = load_github_projects()
         projects = _merge_with_static_projects(gh_projects)
         if not projects:
-            logger.warning("Force-refresh: GitHub returned no projects, using static.")
             projects = STATIC_PROJECTS
     except Exception as e:
         logger.warning("Force-refresh failed, using static projects: %s", e)
@@ -203,13 +201,12 @@ def score_project_for_role_and_criteria(
     """
     score = 0
     crit_text = " ".join(criteria).lower()
-
-    tags_part = " ".join(project.get("tags", []))
-    title_part = project.get("title", "")
-    summary_part = project.get("summary", "")
-
-    proj_text = f"{title_part} {summary_part} {tags_part}".lower()
-    title_text = title_part.lower()
+    proj_text = (
+        f"{project.get('title','')} "
+        f"{project.get('summary','')} "
+        f"{' '.join(project.get('tags', []))}"
+    ).lower()
+    title_text = project.get("title", "").lower()
 
     # Match criteria words
     for token in crit_text.split():
@@ -222,11 +219,9 @@ def score_project_for_role_and_criteria(
 
     # Match role tokens
     for token in role.lower().split():
-        if not token:
-            continue
-        if token in title_text:
+        if token and token in title_text:
             score += 4
-        elif token in proj_text:
+        elif token and token in proj_text:
             score += 2
 
     return score
@@ -242,7 +237,7 @@ def select_best_projects_for_role(role: str, criteria: List[str]) -> List[Dict[s
     Grounded in real GitHub repos where possible.
     """
     projects = get_all_projects()
-    scored: List[tuple[int, Dict[str, Any]]] = []
+    scored = []
 
     for p in projects:
         relevance = score_project_for_role_and_criteria(p, role, criteria)
@@ -275,11 +270,9 @@ def generate_ats_summary_and_email(
     """
     crit_text = ", ".join(criteria) if criteria else "the key requirements"
 
-    proj_lines: List[str] = []
+    proj_lines = []
     for p in projects:
-        title = p.get("title", "(untitled)")
-        summary = p.get("summary", "")
-        proj_lines.append(f"- {title} → {summary}")
+        proj_lines.append(f"- {p.get('title','(untitled)')} → {p.get('summary','')}")
 
     projects_list_text = "\n".join(proj_lines) if proj_lines else "Projects list not available."
 
