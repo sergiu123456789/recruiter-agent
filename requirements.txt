@@ -1,6 +1,7 @@
 fastapi
 uvicorn[standard]
 
+<<<<<<< HEAD
 # Pydantic v2 + settings
 pydantic>=2.12
 pydantic-settings>=2.3
@@ -17,11 +18,15 @@ requests
 PyGithub
 
 # Observability / Telemetry
+=======
+# OpenTelemetry
+>>>>>>> origin/master
 opentelemetry-api
 opentelemetry-sdk
 opentelemetry-exporter-otlp
 opentelemetry-instrumentation
 opentelemetry-instrumentation-fastapi
+<<<<<<< HEAD
 opentelemetry-instrumentation-requests
 
 # Utilities
@@ -29,3 +34,29 @@ python-dotenv
 
 
 
+=======
+opentelemetry-instrumentation-asgi
+opentelemetry-instrumentation-logging
+opentelemetry-instrumentation-requests
+opentelemetry-instrumentation-urllib
+opentelemetry-instrumentation-urllib3
+opentelemetry-instrumentation-grpc
+
+# Google Cloud Trace exporter
+google-cloud-trace
+
+# Gemini SDK (the correct one)
+google-genai>=0.3.0
+google-generativeai>=0.7.0
+
+# Utilities
+python-dotenv
+pydantic
+httpx
+requests
+PyGithub
+
+# RAG dependencies
+numpy
+scikit-learn
+>>>>>>> origin/master
