@@ -1,133 +1,72 @@
+
 🚀 Sergiu – AI Recruiter Tour Agent
 A Production-Ready AI Agent Built Using Google/Kaggle Agent Architecture Principles
-
 This project is a production-grade Recruiter Tour Agent, inspired directly by the Google/Kaggle Agents Course and designed as a clean example of:
-
-Deterministic agent orchestration
-
-Schema-driven tools
-
-RAG + embeddings
-
-Memory & sessions
-
-Evaluation (LLM-as-a-judge)
-
-Observability
-
-Deployment to Cloud Run
-
+•	Deterministic agent orchestration
+•	Schema-driven tools
+•	RAG + embeddings
+•	Memory & sessions
+•	Evaluation (LLM-as-a-judge)
+•	Observability
+•	Deployment to Cloud Run
 It acts as an interactive recruiter companion, helping hiring managers instantly understand your strongest qualifications through:
-
-Smart role detection
-
-Criteria-based project selection
-
-Deep-dive project walkthroughs
-
-CV-RAG question answering
-
-ATS-ready summary generation
-
-Recruiter email drafting
-
-Session memory + trajectory logging
-
-Auto-start when arriving from GitHub or LinkedIn
-
+•	Smart role detection
+•	Criteria-based project selection
+•	Deep-dive project walkthroughs
+•	CV-RAG question answering
+•	ATS-ready summary generation
+•	Recruiter email drafting
+•	Session memory + trajectory logging
+•	Auto-start when arriving from GitHub or LinkedIn
 This agent follows the recommended pipeline:
-
 Frontend → FastAPI Backend → Agent Orchestrator → Tools → State + Trajectory
-
+________________________________________
 🧠 Core Capabilities
 ✔ Recruiter-Aware Entry
-
 If the visitor originated from GitHub or LinkedIn, the agent activates a special onboarding flow:
-
 “Welcome! What role are you hiring for?”
-
 ✔ Role & Criteria Extraction
-
 Understands roles such as:
-
-Senior ML Engineer
-
-AI Engineer
-
-NLP Researcher
-
-Data Scientist
-
+•	Senior ML Engineer
+•	AI Engineer
+•	NLP Researcher
+•	Data Scientist
 And canonicalizes recruiter criteria:
-
-Production RAG
-
-Ownership
-
-Leadership
-
-Communication
-
-Safety / reliability focus
-
+•	Production RAG
+•	Ownership
+•	Leadership
+•	Communication
+•	Safety / reliability focus
 ✔ Project Relevance Ranking
-
 Uses embeddings to compute a shortlist of relevant projects based on:
-
-Role
-
-Criteria
-
-Tags
-
-Description
-
-Impact statements
-
+•	Role
+•	Criteria
+•	Tags
+•	Description
+•	Impact statements
 ✔ Deep-Dive Flow
-
 For each project, the agent explains:
-
-What it does
-
-Its impact
-
-Why it fits your role
-
-How it satisfies the criteria
-
+•	What it does
+•	Its impact
+•	Why it fits your role
+•	How it satisfies the criteria
 ✔ ATS Summary & Recruiter Email
-
 Generates:
-
-A polished ATS-ready profile paragraph
-
-A follow-up outreach email recruiters can paste into their ATS
-
+•	A polished ATS-ready profile paragraph
+•	A follow-up outreach email recruiters can paste into their ATS
 ✔ CV-RAG: Gemini Embeddings
-
-Uses text-embedding-004 to embed CV chunks
-
-Retrieves relevant sections
-
-Uses Gemini 1.5 Flash to generate accurate and grounded answers
-
-Hybrid with regex extractors for guaranteed answers (e.g., location, certifications)
-
+•	Uses text-embedding-004 to embed CV chunks
+•	Retrieves relevant sections
+•	Uses Gemini 1.5 Flash to generate accurate and grounded answers
+•	Hybrid with regex extractors for guaranteed answers (e.g., location, certifications)
 ✔ Agent Quality & Observability
-
 Includes a full observability and evaluation stack:
-
-Trajectory logging (user → agent → tool steps)
-
-LLM Judge Evaluation (1–5 scoring)
-
-Metrics (request count, latency)
-
-Tracing via OpenTelemetry
-
-Structured logging
-
+•	Trajectory logging (user → agent → tool steps)
+•	LLM Judge Evaluation (1–5 scoring)
+•	Metrics (request count, latency)
+•	Tracing via OpenTelemetry
+•	Structured logging
+________________________________________
 🏗️ System Architecture
 High-Level Architecture
 ```mermaid
@@ -168,7 +107,8 @@ flowchart LR
     SRV --> METRICS
     SRV --> TRACES
     SRV --> LOGS
-```
+    ```
+________________________________________
 🔁 Agent Flow (State Machine)
 ```mermaid
 stateDiagram-v2
@@ -191,7 +131,8 @@ stateDiagram-v2
     CVQA --> MENU
 
     RESET --> ENTRY
-```
+    ```
+________________________________________
 🧪 Evaluation & Observability
 ```mermaid
 flowchart LR
@@ -202,62 +143,37 @@ flowchart LR
     CHAT --> MET["Metrics"]
     CHAT --> TRACE["Tracing"]
     CHAT --> LOGS["Structured Logs"]
-
 ```
 This enables CI-style evaluation and quality gating.
-
+________________________________________
 🛠️ Tech Stack
 Backend
-
-Python
-
-FastAPI
-
-Uvicorn
-
-Pydantic v2
-
+•	Python
+•	FastAPI
+•	Uvicorn
+•	Pydantic v2
 LLM / RAG
-
-Gemini 1.5 Flash
-
-text-embedding-004
-
-Hybrid regex + embedding RAG
-
+•	Gemini 1.5 Flash
+•	text-embedding-004
+•	Hybrid regex + embedding RAG
 Agent Architecture
-
-Single deterministic orchestrator
-
-MCP-style tool registry
-
-Schema-driven tools
-
-Structured state model
-
-Memory + session storage
-
+•	Single deterministic orchestrator
+•	MCP-style tool registry
+•	Schema-driven tools
+•	Structured state model
+•	Memory + session storage
 Frontend
-
-Lightweight HTML + JS widget
-
-GitHub Pages compatible
-
+•	Lightweight HTML + JS widget
+•	GitHub Pages compatible
 Deployment
-
-Google Cloud Run
-
-Dockerfile + buildpacks
-
-Environment variable configuration
-
+•	Google Cloud Run
+•	Dockerfile + buildpacks
+•	Environment variable configuration
 Storage
-
-SQLite session store
-
-SQLite memory store
-
-Local CV corpus or Google Cloud Storage-ready
+•	SQLite session store
+•	SQLite memory store
+•	Local CV corpus or Google Cloud Storage-ready
+________________________________________
 ```text
 📁 Project Structure
 recruiter-agent/
@@ -287,36 +203,23 @@ recruiter-agent/
 │   └── analytics.py
 └── frontend/
     └── index.html
-```
+    ```
+________________________________________
 🚀 Deployment (Google Cloud Run)
-
 Make sure GOOGLE_API_KEY is set in Cloud Run → Variables.
-
-Deploy with Docker:
 gcloud run deploy recruiter-agent `
   --source . `
   --platform managed `
   --allow-unauthenticated `
   --region europe-west1 `
   --set-env-vars "GOOGLE_API_KEY=$env:GOOGLE_API_KEY"
-
-
 or use the included:
-
 deploy.ps1
-
+________________________________________
 🌟 Why This Project Stands Out
-
-Fully aligned to Google’s modern agent architecture
-
-Implements every course feature: tools, RAG, memory, sessions, evaluation
-
-Deployed, observable, testable
-
-Includes LLM-as-a-Judge, a rare standout feature
-
-Clean, maintainable architecture and codebase
-
-Designed as a real product, not a demo
-
-This project is optimized for Kaggle Agents Capstone scoring and scores near 100/100.
+•	Fully aligned to Google’s modern agent architecture
+•	Implements every course feature: tools, RAG, memory, sessions, evaluation
+•	Deployed, observable, testable
+•	Includes LLM-as-a-Judge, a rare standout feature
+•	Clean, maintainable architecture and codebase
+•	Designed as a real product, not a demo
