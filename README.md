@@ -158,3 +158,44 @@ gcloud run deploy recruiter-agent \
 
 Or with your included PowerShell script (deploy.ps1).
 
+
+flowchart LR
+    subgraph Client["Frontend (Browser / Widget)"]
+        UI["Recruiter UI<br/>- Landing page<br/>- Floating widget"]
+    end
+
+    subgraph API["FastAPI Backend (/chat)"]
+        SRV["FastAPI app<br/>CORS, routing"]
+        AGENT["Agent Orchestrator<br/>agent_turn(state, message)"]
+    end
+
+    subgraph TOOLS["Tools (MCP-style registry)"]
+        CVRAG["cv_rag_query<br/>CV RAG + regex extractors"]
+        PROJ["best_projects_for_role<br/>GitHub portfolio ranker"]
+        ATS["ats_summary_and_email<br/>ATS paragraph + recruiter email"]
+        JUDGE["judge_recruiter_turn<br/>LLM-as-a-judge (Gemini)"]
+    end
+
+    subgraph DATA["Storage & Memory"]
+        SESS["Session Store (SQLite)<br/>State persistence"]
+        MEM["Memory Store (SQLite)<br/>Structured memories"]
+        TRAJ["Trajectory<br/>Step-by-step trace"]
+    end
+
+    subgraph OBS["Observability"]
+        METRICS["Metrics<br/>Requests, latency"]
+        TRACES["Tracing<br/>Spans via OpenTelemetry"]
+        LOGS["Structured Logs<br/>Analytics events"]
+    end
+
+    UI -->|"HTTP /chat JSON"| SRV --> AGENT
+
+    AGENT -->|"tool calls"| TOOLS
+    AGENT -->|"load/save"| SESS
+    AGENT -->|"write memories"| MEM
+    AGENT -->|"record steps"| TRAJ
+
+    SRV --> METRICS
+    SRV --> TRACES
+    SRV --> LOGS
+
