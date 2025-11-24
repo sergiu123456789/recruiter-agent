@@ -1,5 +1,3 @@
-# app/server.py — FastAPI wiring for recruiter-agent
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -14,7 +12,6 @@ from .models import ChatRequest, ChatResponse, State
 
 app = FastAPI()
 
-
 # CORS so frontend (GitHub Pages, local dev, Cloud Run) can call the API
 app.add_middleware(
     CORSMiddleware,
@@ -23,7 +20,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # ------------------------------------------------------------------
 # Frontend serving (index.html from /frontend)
@@ -35,10 +31,6 @@ FRONTEND_DIR = BASE_DIR / "frontend"
 
 @app.get("/", include_in_schema=False)
 async def serve_frontend_root():
-    """
-    Serve the main UI from frontend/index.html.
-    This is what Cloud Run will show at the service root URL.
-    """
     index_path = FRONTEND_DIR / "index.html"
     if not index_path.exists():
         raise RuntimeError(f"Frontend index.html not found at {index_path}")
@@ -47,13 +39,9 @@ async def serve_frontend_root():
 
 @app.get("/{path:path}", include_in_schema=False)
 async def serve_frontend_assets(path: str):
-    """
-    Serve frontend static assets, or fall back to index.html for SPA routing.
-    """
     file_path = FRONTEND_DIR / path
     if file_path.exists() and file_path.is_file():
         return FileResponse(file_path)
-    # Fallback for unknown routes (SPA-style routing)
     index_path = FRONTEND_DIR / "index.html"
     return FileResponse(index_path)
 
@@ -67,30 +55,49 @@ async def chat_endpoint(req: ChatRequest) -> ChatResponse:
     """
     Main chat endpoint used by the frontend.
 
-    - We create a fresh State per request (stateless Cloud Run-friendly).
-    - We pass (state, user_message) into agent_turn.
-    - We wrap the result into a ChatResponse Pydantic model.
+    - If req.state is present, we restore it into a State object.
+    - Otherwise we create a fresh State (first message of the session).
+    - We call agent_turn(state, message) and serialize the updated state.
     """
-    # Fresh state per request (you can later persist using session_id)
-    state = State(source=req.source)
 
-    # Run the agent graph
+    # Restore state safely, *only* from JSON-safe fields
+    if req.state:
+        incoming = req.state if isinstance(req.state, dict) else dict(req.state)
+        state = State(
+            source=incoming.get("source"),
+            role=incoming.get("role"),
+            criteria=incoming.get("criteria", []),
+            memory=incoming.get("memory", []),
+            extra=incoming.get("extra", {}),
+        )
+    else:
+        state = State(source=req.source)
+
     result = agent_turn(state, req.message)
+    # result must be a dict like: { "reply": "...", "state": State }
 
-    # Ensure we don't return None (this caused the Cloud Run crash)
     if result is None:
         raise RuntimeError("agent_turn returned None")
 
-    # Ensure required fields exist
     reply = result.get("reply")
-    result_state = result.get("state")
+    new_state = result.get("state")
 
     if reply is None:
         raise RuntimeError("agent_turn returned dict without 'reply'")
 
-    # Build correct response model
+    # Only return JSON-safe fields back to the frontend
+    safe_state = {
+        "source": new_state.source,
+        "role": new_state.role,
+        "criteria": new_state.criteria,
+        "memory": new_state.memory,
+        "extra": new_state.extra,
+    }
+
+    session_id = req.session_id or "default-session"
+
     return ChatResponse(
         reply=reply,
-        state=result_state,
-        session_id=req.session_id,
+        state=safe_state,
+        session_id=session_id,
     )

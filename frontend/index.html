@@ -191,11 +191,12 @@ document.addEventListener("DOMContentLoaded", function () {
       return setTimeout(initWhenReady, 40);
     }
 
-    // TODO: update this to your Cloud Run URL in production
-    // e.g. const BACKEND_URL = "https://recruiter-agent-xxxxx-ew.a.run.app/chat";
-    const BACKEND_URL = "https://recruiter-agent-190861422358.europe-west1.run.app/chat";
+    // IMPORTANT: include /chat at the end
+    const BACKEND_URL =
+      "https://recruiter-agent-190861422358.europe-west1.run.app/chat";
 
-    let sessionId = localStorage.getItem("tourSessionId") || null;
+    let sessionId  = localStorage.getItem("tourSessionId") || null;
+    let agentState = null;  // <-- track serialized State from backend
 
     function detectSource() {
       const params = new URLSearchParams(location.search);
@@ -212,7 +213,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function addMsg(cls, text) {
       const d = document.createElement("div");
       d.className = "msg " + cls;
-      d.innerHTML = `<div class="bubble">${text.replace(/\n/g, "<br/>")}</div>`;
+      d.innerHTML = `<div class="bubble">${String(text).replace(/\n/g, "<br/>")}</div>`;
       msgs.appendChild(d);
       msgs.scrollTop = msgs.scrollHeight;
     }
@@ -238,7 +239,8 @@ document.addEventListener("DOMContentLoaded", function () {
       const payload = {
         session_id: sessionId,
         message,
-        source
+        source,
+        state: agentState,  // <-- send previous state back
       };
 
       addAI("Thinking…");
@@ -259,8 +261,15 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         const data = await res.json();
-        sessionId = data.session_id;
-        localStorage.setItem("tourSessionId", sessionId);
+
+        // Keep session & state for next turn
+        if (data.session_id) {
+          sessionId = data.session_id;
+          localStorage.setItem("tourSessionId", sessionId);
+        }
+        if (data.state) {
+          agentState = data.state;
+        }
 
         addAI(data.reply);
 
@@ -314,6 +323,7 @@ document.addEventListener("DOMContentLoaded", function () {
   initWhenReady();
 });
 </script>
+
 
 </body>
 </html>
