@@ -1,4 +1,4 @@
-🚀 Sergiu – AI Recruiter Tour Agent
++🚀 Sergiu – AI Recruiter Tour Agent
 Production-ready AI Agent (Google/Kaggle Agents Style)
 
 This project implements a production-grade AI Recruiter Tour Agent inspired by the Google/Kaggle “Agents” course and recent agent architecture best practices.
@@ -25,9 +25,9 @@ Model (LLM) →
 
 Tools (RAG, portfolio, ATS) →
 
-Orchestrator →
+ hgm,./nbvcxz`    Orchestrator →
 
-State + Trajectory →
+State + Trajectory → dc  t/.,m kjhgfdshjkl;'1`*-
 
 Frontend widget
 
@@ -158,7 +158,7 @@ gcloud run deploy recruiter-agent \
 
 Or with your included PowerShell script (deploy.ps1).
 
-
+```mermaid
 flowchart LR
     subgraph Client["Frontend (Browser / Widget)"]
         UI["Recruiter UI<br/>- Landing page<br/>- Floating widget"]
@@ -198,4 +198,4 @@ flowchart LR
     SRV --> METRICS
     SRV --> TRACES
     SRV --> LOGS
-
+```
