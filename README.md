@@ -192,12 +192,12 @@ recruiter-agent/
 Ensure `GOOGLE_API_KEY` is set in Cloud Run → Variables.
 
 ```bash
-gcloud run deploy recruiter-agent \
-  --source . \
-  --platform managed \
-  --allow-unauthenticated \
-  --region europe-west1 \
-  --set-env-vars "GOOGLE_API_KEY=$GOOGLE_API_KEY"
+gcloud run deploy recruiter-agent `
+  --source . `
+  --platform managed `
+  --allow-unauthenticated `
+  --region europe-west1 `
+  --set-env-vars "GOOGLE_API_KEY=$env:GOOGLE_API_KEY"
 ```
 
 Or use the included `deploy.ps1`.
