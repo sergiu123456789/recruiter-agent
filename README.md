@@ -1,160 +1,85 @@
-🚀 Sergiu – AI Recruiter Tour Agent
-Production-ready AI Agent (Google/Kaggle Agents Style)
+# 🚀 Sergiu – AI Recruiter Tour Agent
+### Production-ready AI Agent (Google/Kaggle Agents Style)
 
-This project implements a production-grade AI Recruiter Tour Agent inspired by the Google/Kaggle “Agents” course and recent agent architecture best practices.
+This project implements a production-grade AI Recruiter Tour Agent inspired by the Google/Kaggle “Agents” course. It acts as an interactive recruiter companion, helping hiring managers instantly understand your strongest qualifications through agentic workflows.
 
-It acts as an interactive recruiter companion, helping hiring managers instantly understand your strongest qualifications through:
+---
 
-Smart role detection
+## 🧠 Core Capabilities
+* **✔️ Recruiter-Aware Entry:** Tailors first messages based on referral source (GitHub/LinkedIn).
+* **✔️ Role & Criteria Extraction:** Understands nuances of Senior ML, AI, and Data Science roles.
+* **✔️ Project Relevance Ranking:** Uses embeddings to compute a shortlist of relevant projects.
+* **✔️ Deep-Dive Flow:** Explains impact and role-match project-by-project.
+* **✔️ ATS-Ready Outputs:** Generates polished summaries and recruiter email drafts.
+* **✔️ CV RAG (Gemini Embeddings):** High-precision retrieval using `text-embedding-004`.
+* **✔️ Observability:** Lightweight trajectory logging with LLM-judge evaluations (1–5 score).
 
-Criteria-based project selection
+---
 
-CV-RAG Q&A
+## 🏗️ Tech Stack
+* **Backend:** FastAPI, Uvicorn
+* **LLM:** Gemini 1.5 Flash (`google-genai`)
+* **Embeddings:** `models/text-embedding-004`
+* **Frontend:** Lightweight JS widget
+* **Cloud:** Google Cloud Run (Containerized)
 
-ATS-ready summaries
+---
 
-Recruiter email drafting
-
-Session memory + trajectory logging
-
-Auto-start when arriving from GitHub or LinkedIn
-
-Designed as a single-agent with tools, following modern agentic patterns:
-
-Model (LLM) →
-
-Tools (RAG, portfolio, ATS) →
-
-Orchestrator →
-
-State + Trajectory →
-
-Frontend widget
-
-🧠 Core Capabilities
-✔️ Recruiter-Aware Entry
-
-Detects if the visitor came from GitHub or LinkedIn, then tailors the first message.
-
-✔️ Role & Criteria Extraction
-
-Understands roles like:
-
-Senior ML Engineer
-
-AI Engineer
-
-NLP Researcher
-
-Data Scientist
-
-And recruiter criteria such as:
-
-Production RAG
-
-Ownership
-
-Leadership
-
-Communication
-
-✔️ Project Relevance Ranking
-
-Uses embeddings to compute a shortlist of the most relevant projects based on:
-
-Role
-
-Criteria
-
-Tags
-
-Summary text
-
-Impact statements
-
-✔️ Deep-Dive Flow
-
-Walks recruiters project-by-project, explaining:
-
-What the project does
-
-Impact
-
-Why it matches the role + criteria
-
-✔️ ATS-Ready Summary + Recruiter Email Draft
-
-Creates:
-
-A polished ATS paragraph
-
-A recruiter follow-up email template
-
-✔️ CV RAG (Gemini Embeddings)
-
-Chunked CV retrieval using text-embedding-004, then answer generation using Gemini 1.5 Flash.
-
-✔️ Agent Quality & Observability
-
-Lightweight trajectory logging:
-
-user step
-
-agent step
-
-tool step
-
-LLM judge evaluation (1–5 score)
-
-🏗️ Tech Stack
-
-Backend: FastAPI, Uvicorn
-
-LLM: Gemini 1.5 Flash (google-genai)
-
-Embeddings: models/text-embedding-004
-
-Architecture: Custom single-agent orchestrator with tools
-
-Frontend: Small JS widget (GitHub Pages compatible)
-
-Deployment: Google Cloud Run
-
-Storage: In-memory session store (extendable)
-
-Buildpacks deployment works, but Dockerfile is included for full control.
-
-📁 Project Structure
+## 📁 Project Structure
+```text
 recruiter-agent/
-├── README.md
-├── requirements.txt
-├── main.py
+├── README.md           <-- You are here
+├── deploy.ps1          <-- Automated Zero-Cost Deployment
+├── Dockerfile          <-- Optimized Python-slim container
+├── requirements.txt    <-- Dependencies
+├── main.py             <-- Entry point
 ├── app/
-│   ├── __init__.py
-│   ├── server.py
-│   ├── agent.py
-│   ├── tools.py
-│   ├── cv_rag.py
-│   ├── quality.py
-│   ├── models/
-│   │   └── state.py
-│   └── session_store.py
+│   ├── agent.py        <-- Orchestrator & Logic
+│   ├── cv_rag.py       <-- Vector Search / RAG
+│   ├── server.py       <-- API Routes
+│   └── quality.py      <-- Trajectory Logging
 └── frontend/
-    └── index.html
+    └── index.html      <-- Recruiter Widget
+🚀 Deployment (Zero-Cost Optimized)
+This project is configured to run on the Google Cloud Free Tier. The included deploy.ps1 script ensures the service "scales to zero" when not in use.
 
-🚀 Deployment (Cloud Run)
+Prerequisites
+Google Cloud SDK and Docker Desktop installed.
 
-Ensure GOOGLE_API_KEY is available (Cloud Run → Variables).
+GOOGLE_API_KEY from Google AI Studio.
 
-Deploy with Docker:
+Deployment Steps
+Open PowerShell in the project root.
 
-gcloud run deploy recruiter-agent \
-    --source . \
-    --platform managed \
-    --allow-unauthenticated \
-    --region europe-west1 \
-    --set-env-vars GOOGLE_API_KEY=$GOOGLE_API_KEY
+Run the deployment script:
+
+PowerShell
+
+.\deploy.ps1
+The script will automatically create the Artifact Registry repository, build the image, and deploy to Cloud Run with zero-cost settings.
+
+💰 Cost-Control Features
+--min-instances 0: Ensures you are not billed for idle time.
+
+--cpu-throttling: Stops CPU billing immediately after request completion.
+
+Artifact Registry: Uses standard Docker storage (Keep < 500MB for free tier).
+
+📝 License
+MIT
 
 
-Or with your included PowerShell script (deploy.ps1).
+---
 
+### How to push this final version to GitHub
+Now that the README is "proper" and includes your specific project info, run these commands to finish the sync:
+
+1.  **Stage and Commit:**
+    ```powershell
+    git add README.md
+    git commit -m "Finalized professional README with Zero-Cost deployment info"
+    ```
+2.  **Push:**
+    ```powershell
+    git push origin main --force
+    ```
