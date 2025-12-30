@@ -44,7 +44,7 @@ recruiter-agent/
 └── frontend/
     └── index.html      <-- Recruiter Widget
 ```
-🚀 Deployment (Zero-Cost Optimized)
+## 🚀 Deployment (Zero-Cost Optimized)
 This project is configured to run on the Google Cloud Free Tier. The included deploy.ps1 script ensures the service "scales to zero" when not in use.
 
 Prerequisites
@@ -62,12 +62,10 @@ PowerShell
 .\deploy.ps1
 The script will automatically create the Artifact Registry repository, build the image, and deploy to Cloud Run with zero-cost settings.
 
-💰 Cost-Control Features
+## 💰 Cost-Control Features
 --min-instances 0: Ensures you are not billed for idle time.
 
 --cpu-throttling: Stops CPU billing immediately after request completion.
 
 Artifact Registry: Uses standard Docker storage (Keep < 500MB for free tier).
 
-📝 License
-MIT
