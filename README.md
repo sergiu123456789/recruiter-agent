@@ -6,6 +6,7 @@ This project implements a production-grade AI Recruiter Tour Agent inspired by t
 ---
 
 ## 🧠 Core Capabilities
+
 * **✔️ Recruiter-Aware Entry:** Tailors first messages based on referral source (GitHub/LinkedIn).
 * **✔️ Role & Criteria Extraction:** Understands nuances of Senior ML, AI, and Data Science roles.
 * **✔️ Project Relevance Ranking:** Uses embeddings to compute a shortlist of relevant projects.
@@ -17,6 +18,7 @@ This project implements a production-grade AI Recruiter Tour Agent inspired by t
 ---
 
 ## 🏗️ Tech Stack
+
 * **Backend:** FastAPI, Uvicorn
 * **LLM:** Gemini 1.5 Flash (`google-genai`)
 * **Embeddings:** `models/text-embedding-004`
@@ -26,6 +28,7 @@ This project implements a production-grade AI Recruiter Tour Agent inspired by t
 ---
 
 ## 📁 Project Structure
+
 ```text
 recruiter-agent/
 ├── README.md           <-- You are here
@@ -40,7 +43,6 @@ recruiter-agent/
 │   └── quality.py      <-- Trajectory Logging
 └── frontend/
     └── index.html      <-- Recruiter Widget
-```
 🚀 Deployment (Zero-Cost Optimized)
 This project is configured to run on the Google Cloud Free Tier. The included deploy.ps1 script ensures the service "scales to zero" when not in use.
 
