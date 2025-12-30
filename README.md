@@ -40,6 +40,7 @@ recruiter-agent/
 │   └── quality.py      <-- Trajectory Logging
 └── frontend/
     └── index.html      <-- Recruiter Widget
+```
 🚀 Deployment (Zero-Cost Optimized)
 This project is configured to run on the Google Cloud Free Tier. The included deploy.ps1 script ensures the service "scales to zero" when not in use.
 
