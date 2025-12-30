@@ -67,19 +67,3 @@ Artifact Registry: Uses standard Docker storage (Keep < 500MB for free tier).
 
 📝 License
 MIT
-
-
----
-
-### How to push this final version to GitHub
-Now that the README is "proper" and includes your specific project info, run these commands to finish the sync:
-
-1.  **Stage and Commit:**
-    ```powershell
-    git add README.md
-    git commit -m "Finalized professional README with Zero-Cost deployment info"
-    ```
-2.  **Push:**
-    ```powershell
-    git push origin main --force
-    ```
